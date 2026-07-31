@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  just_audio: ^0.9.36
+  just_audio: ^0.9.46
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -40,6 +40,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_native_splash: ^2.4.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -53,6 +54,11 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/Logo.png
+    - assets/messages/
+    - assets/sermons/
+    - assets/songs/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -89,3 +95,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+flutter_native_splash:
+  color: "#FFFFFF"          # White background
+  image: assets/Logo.png    # Custom splash image
+  android: true
+  ios: true
+
+  android_12:
+    color: "#FFFFFF"
+    image: assets/Logo.png

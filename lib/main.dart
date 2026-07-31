@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'services/audio_service.dart';
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(const GospelDashboardApp());
@@ -11,43 +11,59 @@ class GospelDashboardApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: TestAudioScreen(),                 // Temporary test screen
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+      ),
+      home: const SplashToHome(),
     );
   }
 }
 
-class TestAudioScreen extends StatelessWidget {
-  final AudioService audio = AudioService();   // Inject audio service
+class SplashToHome extends StatefulWidget {
+  const SplashToHome({super.key});
 
-  final String testUrl =
-      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; 
-      // Replace with sermon/song MP3 later
+  @override
+  State<SplashToHome> createState() => _SplashToHomeState();
+}
 
-  TestAudioScreen({super.key});
+class _SplashToHomeState extends State<SplashToHome>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),   // Fade duration
+    );
+
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,                       // Smooth curve
+    );
+
+    _controller.forward();                           // Start fade
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Audio Test")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () => audio.playUrl(testUrl),
-              child: const Text("Play"),
-            ),
-            ElevatedButton(
-              onPressed: () => audio.pause(),
-              child: const Text("Pause"),
-            ),
-            ElevatedButton(
-              onPressed: () => audio.stop(),
-              child: const Text("Stop"),
-            ),
-          ],
-        ),
-      ),
+    return FadeTransition(
+      opacity: _fade,
+      child: const HomeScreen(),                     // Your dashboard
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
