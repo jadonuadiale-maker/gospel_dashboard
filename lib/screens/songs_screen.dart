@@ -3,13 +3,24 @@ import '../models/audio_item.dart';
 import '../services/audio_service.dart';
 import 'player_screen.dart';
 
-class SongsScreen extends StatelessWidget {
+class SongsScreen extends StatefulWidget {
   const SongsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final audio = AudioService();
+  State<SongsScreen> createState() => _SongsScreenState();
+}
 
+class _SongsScreenState extends State<SongsScreen> {
+  final audio = AudioService();
+
+  @override
+  void initState() {
+    super.initState();
+    audio.stateStream.listen((_) => setState(() {}));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final songs = [
       AudioItem(
         title: "Jehovah Jireh - Don Moen",
@@ -39,9 +50,26 @@ class SongsScreen extends StatelessWidget {
         itemCount: songs.length,
         itemBuilder: (context, index) {
           final item = songs[index];
+          final isCurrent = audio.currentUrl == item.url;
+          final isPlaying = audio.isPlaying && isCurrent;
+
           return ListTile(
             title: Text(item.title),
+            trailing: IconButton(
+              icon: Icon(
+                isPlaying ? Icons.pause : Icons.play_arrow,
+                color: Colors.blue,
+              ),
+              onPressed: () {
+                if (!isCurrent) {
+                  audio.playUrl(item.url);
+                } else {
+                  audio.togglePlayPause();
+                }
+              },
+            ),
             onTap: () {
+              // 🔥 Clicking item should ONLY open player screen
               Navigator.push(
                 context,
                 MaterialPageRoute(

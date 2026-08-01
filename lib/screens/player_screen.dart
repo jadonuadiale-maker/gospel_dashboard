@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
-import 'package:just_audio/just_audio.dart';
 
 class PlayerScreen extends StatefulWidget {
   final AudioService audio;
@@ -24,20 +23,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
   void initState() {
     super.initState();
 
-    // Listen to duration
     widget.audio.durationStream.listen((d) {
       if (d != null) {
         setState(() => _duration = d);
       }
     });
 
-    // Listen to position
     widget.audio.positionStream.listen((p) {
       setState(() => _position = p);
     });
 
-    // Start loading + playing
-    widget.audio.playUrl(widget.url);
+    widget.audio.stateStream.listen((_) => setState(() {}));
+
+    // 🔥 PlayerScreen NO LONGER calls playUrl()
+    // Playback is controlled ONLY by category list toggle button
   }
 
   @override
@@ -54,40 +53,36 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 children: [
                   const Icon(Icons.music_note, size: 80),
                   const SizedBox(height: 20),
-
-                  // Duration text
                   Text(
                     "${_format(_position)} / ${_format(_duration)}",
                     style: const TextStyle(fontSize: 18),
                   ),
-
                   const SizedBox(height: 20),
-
-                  // Seek bar
                   Slider(
                     value: _position.inSeconds.toDouble(),
                     max: _duration.inSeconds.toDouble(),
                     onChanged: (value) {
-                      widget.audio.seek(Duration(seconds: value.toInt()));
+                      audio.seek(Duration(seconds: value.toInt()));
                     },
                   ),
-
                   const SizedBox(height: 40),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.play_arrow, size: 40),
-                        onPressed: () => widget.audio.playUrl(widget.url),
+                        icon: const Icon(Icons.replay_10, size: 40),
+                        onPressed: () => audio.rewind15(),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.pause, size: 40),
-                        onPressed: () => widget.audio.pause(),
+                        icon: Icon(
+                          audio.isPlaying ? Icons.pause : Icons.play_arrow,
+                          size: 40,
+                        ),
+                        onPressed: () => audio.togglePlayPause(),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.stop, size: 40),
-                        onPressed: () => widget.audio.stop(),
+                        icon: const Icon(Icons.forward_10, size: 40),
+                        onPressed: () => audio.forward15(),
                       ),
                     ],
                   ),
