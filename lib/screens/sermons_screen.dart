@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 import '../services/audio_service.dart';
@@ -12,11 +13,18 @@ class SermonsScreen extends StatefulWidget {
 
 class _SermonsScreenState extends State<SermonsScreen> {
   final audio = AudioService();
+  late StreamSubscription _audioSub;
 
   @override
   void initState() {
     super.initState();
-    audio.stateStream.listen((_) => setState(() {}));
+    _audioSub = audio.stateStream.listen((_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _audioSub.cancel();
+    super.dispose();
   }
 
   @override

@@ -42,22 +42,22 @@ class _SplashToHomeState extends State<SplashToHome>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),   // Fade duration
+      duration: const Duration(milliseconds: 800),
     );
 
     _fade = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeInOut,                       // Smooth curve
+      curve: Curves.easeInOut,
     );
 
-    _controller.forward();                           // Start fade
+    _controller.forward();
   }
 
   @override
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fade,
-      child: const HomeScreen(),                     // Your dashboard
+      child: const HomeScreen(),
     );
   }
 

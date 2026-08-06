@@ -4,7 +4,12 @@ import 'dart:async';
 class AudioService {
   static final AudioService _instance = AudioService._internal();
   factory AudioService() => _instance;
-  AudioService._internal();
+  AudioService._internal() {
+    // Forward player state changes to UI listeners
+    _player.playerStateStream.listen((_) {
+      _stateController.add(null);
+    });
+  }
 
   final AudioPlayer _player = AudioPlayer();
 
@@ -17,35 +22,40 @@ class AudioService {
   bool get isPlaying => _player.playing;
 
   Future<void> playUrl(String url) async {
-    if (currentUrl != url) {
+    final isSameTrack = currentUrl == url;
+
+    if (!isSameTrack) {
+      // Switching to a new track
       await _player.stop();
-    }
-
-    currentUrl = url;
-    isLoading = true;
-    _stateController.add(null);
-
-    try {
-      if (url.startsWith('assets/')) {
-        await _player.setAsset(url);
-      } else {
-        await _player.setUrl(url);
-      }
-
-      await _player.play();
-    } catch (e) {
-      print("Audio error: $e");
-    } finally {
-      isLoading = false;
+      currentUrl = url;
+      isLoading = true;
       _stateController.add(null);
+
+      try {
+        if (url.startsWith('assets/')) {
+          await _player.setAsset(url);
+        } else {
+          await _player.setUrl(url);
+        }
+      } catch (e) {
+        print("Audio error: $e");
+      } finally {
+        isLoading = false;
+        _stateController.add(null);
+      }
     }
+
+    // For same track, just resume without re-buffering
+    await _player.play();
   }
 
   Future<void> togglePlayPause() async {
     if (_player.playing) {
       await _player.pause();
     } else {
-      await _player.play();
+      if (currentUrl != null) {
+        await _player.play();
+      }
     }
     _stateController.add(null);
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 import '../services/audio_service.dart';
@@ -12,11 +13,18 @@ class SongsScreen extends StatefulWidget {
 
 class _SongsScreenState extends State<SongsScreen> {
   final audio = AudioService();
+  late StreamSubscription _audioSub;
 
   @override
   void initState() {
     super.initState();
-    audio.stateStream.listen((_) => setState(() {}));
+    _audioSub = audio.stateStream.listen((_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _audioSub.cancel();
+    super.dispose();
   }
 
   @override
@@ -69,7 +77,6 @@ class _SongsScreenState extends State<SongsScreen> {
               },
             ),
             onTap: () {
-              // 🔥 Clicking item should ONLY open player screen
               Navigator.push(
                 context,
                 MaterialPageRoute(
