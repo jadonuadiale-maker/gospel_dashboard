@@ -4,7 +4,6 @@ import 'screens/home_screen.dart';
 void main() {
   runApp(const GospelDashboardApp());
 }
-
 class GospelDashboardApp extends StatelessWidget {
   const GospelDashboardApp({super.key});
 
@@ -23,14 +22,12 @@ class GospelDashboardApp extends StatelessWidget {
     );
   }
 }
-
 class SplashToHome extends StatefulWidget {
   const SplashToHome({super.key});
 
   @override
   State<SplashToHome> createState() => _SplashToHomeState();
 }
-
 class _SplashToHomeState extends State<SplashToHome>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;

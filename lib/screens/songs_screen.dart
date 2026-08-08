@@ -32,22 +32,22 @@ class _SongsScreenState extends State<SongsScreen> {
     final songs = [
       AudioItem(
         title: "Jehovah Jireh - Don Moen",
-        url: "assets/songs/06 Jehovah-Jireh (Live).mp3",
+        url: "assets/songs/06 Jehovah-Jireh (Live).opus",
         category: "Song",
       ),
       AudioItem(
         title: "Emmanuel - John Fadejola",
-        url: "assets/songs/Direct-Lyrics-John-Fadejola-Emmanuel-Es-Lyrics-(CeeNaija.com).mp3",
+        url: "assets/songs/Direct-Lyrics-John-Fadejola-Emmanuel-Es-Lyrics-(CeeNaija.com).opus",
         category: "Song",
       ),
       AudioItem(
         title: "The Blessing - Elevation Worship",
-        url: "assets/songs/The Blessing - Kari Jobe, Cody Carnes & Elevation Worship [www.AmenRadio.net].mp3",
+        url: "assets/songs/The Blessing - Kari Jobe, Cody Carnes & Elevation Worship [www.AmenRadio.net].opus",
         category: "Song",
       ),
       AudioItem(
         title: "I Give Myself Away - Williams McDowell",
-        url: "assets/songs/Williams_McDowell_-_I_Give_Myself_Away_CeeNaija.com_.mp3",
+        url: "assets/songs/Williams_McDowell_-_I_Give_Myself_Away_CeeNaija.com_.opus",
         category: "Song",
       ),
     ];

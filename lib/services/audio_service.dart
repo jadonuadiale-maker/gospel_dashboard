@@ -4,14 +4,17 @@ import 'dart:async';
 class AudioService {
   static final AudioService _instance = AudioService._internal();
   factory AudioService() => _instance;
+
   AudioService._internal() {
-    // Forward player state changes to UI listeners
     _player.playerStateStream.listen((_) {
       _stateController.add(null);
     });
   }
 
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _player = AudioPlayer(
+    handleInterruptions: false,
+    androidApplyAudioAttributes: false,
+  );
 
   bool isLoading = false;
   String? currentUrl;
@@ -25,7 +28,6 @@ class AudioService {
     final isSameTrack = currentUrl == url;
 
     if (!isSameTrack) {
-      // Switching to a new track
       await _player.stop();
       currentUrl = url;
       isLoading = true;
@@ -37,6 +39,13 @@ class AudioService {
         } else {
           await _player.setUrl(url);
         }
+
+        // Preload decoded frames before playback
+        await _player.load();
+
+        // Optional small runtime boost
+        _player.setVolume(1.15);
+
       } catch (e) {
         print("Audio error: $e");
       } finally {
@@ -45,7 +54,6 @@ class AudioService {
       }
     }
 
-    // For same track, just resume without re-buffering
     await _player.play();
   }
 
