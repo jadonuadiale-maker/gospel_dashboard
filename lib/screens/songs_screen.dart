@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 import '../services/audio_service.dart';
 import 'player_screen.dart';
+import '../widgets/audio_tile.dart';
 
 class SongsScreen extends StatefulWidget {
   const SongsScreen({super.key});
@@ -61,22 +62,17 @@ class _SongsScreenState extends State<SongsScreen> {
           final isCurrent = audio.currentUrl == item.url;
           final isPlaying = audio.isPlaying && isCurrent;
 
-          return ListTile(
-            title: Text(item.title),
-            trailing: IconButton(
-              icon: Icon(
-                isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.blue,
-              ),
-              onPressed: () {
-                if (!isCurrent) {
-                  audio.playUrl(item.url);
-                } else {
-                  audio.togglePlayPause();
-                }
-              },
-            ),
-            onTap: () {
+          return AudioTile(
+            item: item,
+            isPlaying: isPlaying,
+            onPlayPause: () {
+              if (!isCurrent) {
+                audio.playUrl(item.url);
+              } else {
+                audio.togglePlayPause();
+              }
+            },
+            onOpenPlayer: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
