@@ -1,4 +1,4 @@
-// lib/screens/songs_screen.dart
+// lib/screens/hymns_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
@@ -7,44 +7,39 @@ import '../widgets/audio_tile.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/category_nav_bar.dart';
 
-class SongsScreen extends StatefulWidget {
-  const SongsScreen({super.key});
+class HymnsScreen extends StatefulWidget {
+  const HymnsScreen({super.key});
 
   @override
-  State<SongsScreen> createState() => _SongsScreenState();
+  State<HymnsScreen> createState() => _HymnsScreenState();
 }
 
-class _SongsScreenState extends State<SongsScreen> {
+class _HymnsScreenState extends State<HymnsScreen> {
   final audio = AudioService();
   late StreamSubscription _audioSub;
 
   int navIndex = 0;
 
-  final List<AudioItem> allSongs = [
+  final List<AudioItem> allHymns = [
     AudioItem(
-      title: "Jehovah Jireh - Don Moen",
-      url: "assets/songs/06 Jehovah-Jireh (Live).opus",
-      category: "Song",
+      title: "Amazing Grace - Traditional",
+      url: "assets/hymns/Amazing-Grace.opus",
+      category: "Hymn",
     ),
     AudioItem(
-      title: "Emmanuel - John Fadejola",
-      url: "assets/songs/Direct-Lyrics-John-Fadejola-Emmanuel-Es-Lyrics-(CeeNaija.com).opus",
-      category: "Song",
+      title: "How Great Thou Art - Traditional",
+      url: "assets/hymns/How-Great-Thou-Art.opus",
+      category: "Hymn",
     ),
     AudioItem(
-      title: "The Blessing - Elevation Worship",
-      url: "assets/songs/The Blessing - Kari Jobe, Cody Carnes & Elevation Worship [www.AmenRadio.net].opus",
-      category: "Song",
-    ),
-    AudioItem(
-      title: "I Give Myself Away - Williams McDowell",
-      url: "assets/songs/Williams_McDowell_-_I_Give_Myself_Away_CeeNaija.com_.opus",
-      category: "Song",
+      title: "Be Thou My Vision - Traditional",
+      url: "assets/hymns/Be-Thou-My-Vision.opus",
+      category: "Hymn",
     ),
   ];
 
-  final List<AudioItem> favouriteSongs = <AudioItem>[];
-  final List<AudioItem> songsByArtist = <AudioItem>[];
+  final List<AudioItem> favouriteHymns = <AudioItem>[];
+  final List<AudioItem> hymnsByArtist = <AudioItem>[];
 
   @override
   void initState() {
@@ -64,18 +59,18 @@ class _SongsScreenState extends State<SongsScreen> {
 
     switch (navIndex) {
       case 1:
-        visibleList = favouriteSongs;
+        visibleList = favouriteHymns;
         break;
       case 2:
-        visibleList = songsByArtist;
+        visibleList = hymnsByArtist;
         break;
       default:
-        visibleList = allSongs;
+        visibleList = allHymns;
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Songs"),
+        title: const Text("Hymns"),
         actions: [
           IconButton(
             icon: const Icon(Icons.playlist_play),
@@ -106,11 +101,9 @@ class _SongsScreenState extends State<SongsScreen> {
                   }
                 },
                 onSelectTrack: () {
-                  // Tap tile → set current track only
                   if (!isCurrent) {
                     audio.playUrl(item.url);
                   }
-                  // No navigation; mini-player reflects this change globally
                 },
               ),
             );

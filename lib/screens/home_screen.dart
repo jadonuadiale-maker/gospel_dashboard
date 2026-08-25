@@ -1,28 +1,21 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
-import 'sermons_screen.dart';
-import 'songs_screen.dart';
-import 'messages_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // --- CategoryCard: visually intentional card component ---
+  // --- CategoryCard: reusable card for each category ---
   Widget _categoryCard({
     required BuildContext context,
     required String title,
     required String subtitle,
     required IconData icon,
     required Color accent,
-    required Widget screen,
+    required String routeName,
   }) {
     return InkWell(
-      // ripple feedback
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => screen),
-      ),
+      onTap: () => Navigator.pushNamed(context, routeName),
       child: Container(
-        // card styling
         margin: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
@@ -38,12 +31,8 @@ class HomeScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // category icon
             Icon(icon, size: 42, color: accent),
-
             const SizedBox(width: 16),
-
-            // title + subtitle
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -83,7 +72,7 @@ class HomeScreen extends StatelessWidget {
             subtitle: "Explore sermons",
             icon: Icons.menu_book,
             accent: Colors.amber.shade400,
-            screen: const SermonsScreen(),
+            routeName: '/sermons',
           ),
           _categoryCard(
             context: context,
@@ -91,7 +80,7 @@ class HomeScreen extends StatelessWidget {
             subtitle: "Listen to worship songs",
             icon: Icons.music_note,
             accent: Colors.tealAccent.shade400,
-            screen: const SongsScreen(),
+            routeName: '/songs',
           ),
           _categoryCard(
             context: context,
@@ -99,7 +88,15 @@ class HomeScreen extends StatelessWidget {
             subtitle: "Inspirational messages",
             icon: Icons.message,
             accent: Colors.indigoAccent.shade400,
-            screen: const MessagesScreen(),
+            routeName: '/messages',
+          ),
+          _categoryCard(
+            context: context,
+            title: "Hymns",
+            subtitle: "Classic worship hymns",
+            icon: Icons.library_music,
+            accent: Colors.greenAccent.shade400,
+            routeName: '/hymns',   // NEW
           ),
         ],
       ),

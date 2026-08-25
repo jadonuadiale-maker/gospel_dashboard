@@ -1,15 +1,16 @@
-import 'dart:async';
+// lib/screens/player_screen.dart
 import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
+import '../models/audio_item.dart';
 
 class PlayerScreen extends StatefulWidget {
   final AudioService audio;
-  final String url;
+  final AudioItem? item;
 
   const PlayerScreen({
     super.key,
     required this.audio,
-    required this.url,
+    this.item,
   });
 
   @override
@@ -17,108 +18,137 @@ class PlayerScreen extends StatefulWidget {
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
-  Duration _position = Duration.zero;
-  Duration _duration = Duration.zero;
-
-  late StreamSubscription _durationSub;
-  late StreamSubscription _positionSub;
-  late StreamSubscription _stateSub;
+  late AudioService audio;
 
   @override
   void initState() {
     super.initState();
+    audio = widget.audio;
 
-    _durationSub = widget.audio.durationStream.listen((d) {
-      if (d != null) {
-        setState(() => _duration = d);
-      }
-    });
+    // Ensure correct track plays when opened with a specific item
+    if (widget.item != null && audio.currentUrl != widget.item!.url) {
+      audio.playUrl(widget.item!.url);
+    }
 
-    _positionSub = widget.audio.positionStream.listen((p) {
-      setState(() => _position = p);
-    });
-
-    _stateSub = widget.audio.stateStream.listen((_) => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _durationSub.cancel();
-    _positionSub.cancel();
-    _stateSub.cancel();
-    super.dispose();
+    // Listen for playback state changes to refresh UI
+    audio.stateStream.listen((_) => setState(() {}));
   }
 
   @override
   Widget build(BuildContext context) {
-    final audio = widget.audio;
-    final isCurrent = audio.currentUrl == widget.url;
-    final isPlaying = audio.isPlaying && isCurrent;
+    final currentUrl = audio.currentUrl;
+    final isPlaying = audio.isPlaying;
 
-    final displayPosition = isCurrent ? _position : Duration.zero;
-    final displayDuration = isCurrent ? _duration : Duration.zero;
-
-    final maxSeconds =
-        displayDuration.inSeconds > 0 ? displayDuration.inSeconds.toDouble() : 1.0;
+    // Handle case where no track is selected
+    if (currentUrl == null) {
+      return const Scaffold(
+        body: Center(child: Text("No track selected")),
+      );
+    }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Now Playing")),
-      body: Center(
-        child: audio.isLoading
-            ? const CircularProgressIndicator()
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.music_note, size: 80),
-                  const SizedBox(height: 20),
-                  Text(
-                    "${_format(displayPosition)} / ${_format(displayDuration)}",
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(height: 20),
-                  Slider(
-                    value: displayPosition.inSeconds.toDouble(),
-                    max: maxSeconds,
-                    onChanged: isCurrent
-                        ? (value) {
-                            audio.seek(Duration(seconds: value.toInt()));
-                          }
-                        : null,
-                  ),
-                  const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.replay_10, size: 40),
-                        onPressed: isCurrent ? () => audio.rewind15() : null,
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          isPlaying ? Icons.pause : Icons.play_arrow,
-                          size: 40,
-                        ),
-                        onPressed: () {
-                          if (!isCurrent) {
-                            audio.playUrl(widget.url);
-                          } else {
-                            audio.togglePlayPause();
-                          }
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.forward_10, size: 40),
-                        onPressed: isCurrent ? () => audio.forward15() : null,
-                      ),
-                    ],
-                  ),
-                ],
+      appBar: AppBar(
+        title: const Text("Now Playing"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // --- Track title display ---
+            Text(
+              currentUrl.split('/').last,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // --- Playback progress slider ---
+            StreamBuilder<Duration>(
+              stream: audio.positionStream,
+              builder: (context, snapshotPos) {
+                final pos = snapshotPos.data ?? Duration.zero;
+
+                return StreamBuilder<Duration?>(
+                  stream: audio.durationStream,
+                  builder: (context, snapshotDur) {
+                    final dur = snapshotDur.data ?? Duration.zero;
+
+                    // Ensure proper double types for Slider
+                    final max = dur.inSeconds.toDouble();
+                    final value = pos.inSeconds.toDouble().clamp(0.0, max);
+
+                    return Column(
+                      children: [
+                        Slider(
+                          value: max == 0.0 ? 0.0 : value,
+                          max: max == 0.0 ? 1.0 : max,
+                          onChanged: (v) {
+                            audio.seek(Duration(seconds: v.toInt()));
+                          },
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_fmt(pos)),
+                            Text(_fmt(dur)),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+
+            const SizedBox(height: 30),
+
+            // --- Playback controls ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.replay_10, size: 32),
+                  onPressed: audio.rewind15,
+                ),
+                const SizedBox(width: 20),
+                IconButton(
+                  icon: Icon(
+                    isPlaying ? Icons.pause_circle : Icons.play_circle,
+                    size: 70,
+                    color: Colors.greenAccent.shade400,
+                  ),
+                  onPressed: audio.togglePlayPause,
+                ),
+                const SizedBox(width: 20),
+                IconButton(
+                  icon: const Icon(Icons.forward_10, size: 32),
+                  onPressed: audio.forward15,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 30),
+
+            // --- Favourite button placeholder ---
+            ElevatedButton.icon(
+              icon: const Icon(Icons.favorite_border),
+              label: const Text("Favourite"),
+              onPressed: () {
+                // TODO: Implement favourites later
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  String _format(Duration d) {
+  // --- Helper: format duration as mm:ss ---
+  String _fmt(Duration d) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return "$m:$s";

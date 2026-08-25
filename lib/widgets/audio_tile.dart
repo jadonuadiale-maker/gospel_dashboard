@@ -1,3 +1,4 @@
+// lib/widgets/audio_tile.dart
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 
@@ -5,14 +6,14 @@ class AudioTile extends StatelessWidget {
   final AudioItem item;
   final bool isPlaying;
   final VoidCallback onPlayPause;
-  final VoidCallback onOpenPlayer;
+  final VoidCallback onSelectTrack; // renamed from onOpenPlayer
 
   const AudioTile({
     super.key,
     required this.item,
     required this.isPlaying,
     required this.onPlayPause,
-    required this.onOpenPlayer,
+    required this.onSelectTrack,
   });
 
   @override
@@ -32,24 +33,19 @@ class AudioTile extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        // Tap anywhere → open PlayerScreen
-        onTap: onOpenPlayer,
+        // Tap anywhere → select track (no navigation)
+        onTap: onSelectTrack,
         child: Row(
           children: [
-            // --- Play/Pause icon moved to the left ---
             IconButton(
               icon: Icon(
                 isPlaying ? Icons.pause_circle : Icons.play_circle,
                 size: 42,
                 color: Colors.blueAccent,
               ),
-              // Tap icon → toggle playback
               onPressed: onPlayPause,
             ),
-
             const SizedBox(width: 16),
-
-            // --- Track title and category context ---
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
