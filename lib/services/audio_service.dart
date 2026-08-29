@@ -11,10 +11,7 @@ class AudioService {
     });
   }
 
-  final AudioPlayer _player = AudioPlayer(
-    handleInterruptions: false,
-    androidApplyAudioAttributes: false,
-  );
+  final AudioPlayer _player = AudioPlayer();
 
   bool isLoading = false;
   String? currentUrl;
@@ -44,10 +41,10 @@ class AudioService {
         await _player.load();
 
         // Optional small runtime boost
-        _player.setVolume(1.15);
+        _player.setVolume(1.0);
 
       } catch (e) {
-        print("Audio error: $e");
+        print("Audio error on $url: $e");   // was: print("Audio error: $e");
       } finally {
         isLoading = false;
         _stateController.add(null);

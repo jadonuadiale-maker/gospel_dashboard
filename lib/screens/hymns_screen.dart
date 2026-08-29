@@ -23,17 +23,17 @@ class _HymnsScreenState extends State<HymnsScreen> {
   final List<AudioItem> allHymns = [
     AudioItem(
       title: "Amazing Grace - Traditional",
-      url: "assets/hymns/Amazing-Grace.opus",
+      url: "assets/hymns/amazing_grace.opus",
       category: "Hymn",
     ),
     AudioItem(
       title: "How Great Thou Art - Traditional",
-      url: "assets/hymns/How-Great-Thou-Art.opus",
+      url: "assets/hymns/Christian_Hymn_-_How_Great_Thou_Art_CeeNaija.com_.opus",
       category: "Hymn",
     ),
     AudioItem(
       title: "Be Thou My Vision - Traditional",
-      url: "assets/hymns/Be-Thou-My-Vision.opus",
+      url: "assets/hymns/Selah_-_Be_Thou_My_Vision_CeeNaija.com_.opus",
       category: "Hymn",
     ),
   ];
