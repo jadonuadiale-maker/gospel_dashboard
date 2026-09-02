@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
+import '../services/favourites_service.dart';
 import '../models/audio_item.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -20,7 +21,9 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   late AudioService audio;
+  final favourites = FavouritesService();
   late StreamSubscription _audioSub;
+  late StreamSubscription _favSub;
 
   @override
   void initState() {
@@ -34,12 +37,49 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _audioSub = audio.stateStream.listen((_) {
       if (mounted) setState(() {});
     });
+    _favSub = favourites.changes.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _audioSub.cancel();
+    _favSub.cancel();
     super.dispose();
+  }
+
+  /// The '/player' route is currently opened without an item (see
+  /// main.dart), so this reconstructs a reasonable AudioItem straight
+  /// from the asset path when widget.item wasn't supplied.
+  AudioItem _resolveItem(String url) {
+    if (widget.item != null) return widget.item!;
+
+    final segments = url.split('/');
+    final folder = segments.length > 1 ? segments[1] : '';
+    String category;
+    switch (folder) {
+      case 'hymns':
+        category = 'Hymn';
+        break;
+      case 'sermons':
+        category = 'Sermon';
+        break;
+      case 'songs':
+        category = 'Song';
+        break;
+      case 'messages':
+        category = 'Message';
+        break;
+      default:
+        category = 'Unknown';
+    }
+
+    return AudioItem(
+      title: segments.last,
+      url: url,
+      category: category,
+    );
   }
 
   @override
@@ -52,6 +92,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
         body: Center(child: Text("No track selected")),
       );
     }
+
+    final item = _resolveItem(currentUrl);
+    final isFavourite = favourites.isFavourite(currentUrl);
 
     return Scaffold(
       appBar: AppBar(
@@ -139,11 +182,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
             const SizedBox(height: 30),
 
             ElevatedButton.icon(
-              icon: const Icon(Icons.favorite_border),
-              label: const Text("Favourite"),
-              onPressed: () {
-                // TODO: Implement favourites later
-              },
+              icon: Icon(
+                isFavourite ? Icons.favorite : Icons.favorite_border,
+                color: isFavourite ? Colors.redAccent : null,
+              ),
+              label: Text(isFavourite ? "Favourited" : "Favourite"),
+              onPressed: () => favourites.toggleFavourite(item),
             ),
           ],
         ),

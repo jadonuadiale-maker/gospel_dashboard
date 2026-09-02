@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 import '../services/audio_service.dart';
+import '../services/favourites_service.dart';
 import '../widgets/audio_tile.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/category_nav_bar.dart';
@@ -16,7 +17,9 @@ class SermonsScreen extends StatefulWidget {
 
 class _SermonsScreenState extends State<SermonsScreen> {
   final audio = AudioService();
+  final favourites = FavouritesService();
   late StreamSubscription _audioSub;
+  late StreamSubscription _favSub;
 
   int navIndex = 0;
 
@@ -38,7 +41,6 @@ class _SermonsScreenState extends State<SermonsScreen> {
     ),
   ];
 
-  final List<AudioItem> favouriteSermons = <AudioItem>[];
   final List<AudioItem> sermonsByMinister = <AudioItem>[];
 
   @override
@@ -47,11 +49,15 @@ class _SermonsScreenState extends State<SermonsScreen> {
     _audioSub = audio.stateStream.listen((_) {
       if (mounted) setState(() {});
     });
+    _favSub = favourites.changes.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _audioSub.cancel();
+    _favSub.cancel();
     super.dispose();
   }
 
@@ -61,7 +67,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
 
     switch (navIndex) {
       case 1:
-        visibleList = favouriteSermons;
+        visibleList = favourites.favouritesFor("Sermon");
         break;
       case 2:
         visibleList = sermonsByMinister;
@@ -89,12 +95,14 @@ class _SermonsScreenState extends State<SermonsScreen> {
             final item = visibleList[index];
             final isCurrent = audio.currentUrl == item.url;
             final isPlaying = audio.isPlaying && isCurrent;
+            final isFavourite = favourites.isFavourite(item.url);
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: AudioTile(
                 item: item,
                 isPlaying: isPlaying,
+                isFavourite: isFavourite,
                 onPlayPause: () {
                   if (!isCurrent) {
                     audio.playUrl(item.url, title: item.title, streaming: true);
@@ -107,6 +115,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
                     audio.playUrl(item.url, title: item.title, streaming: true);
                   }
                 },
+                onToggleFavourite: () => favourites.toggleFavourite(item),
               ),
             );
           },

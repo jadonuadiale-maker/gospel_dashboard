@@ -11,10 +11,12 @@ import 'screens/playlist_detail_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/audio_service.dart';
 import 'widgets/mini_player.dart';
+import 'services/favourites_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AudioService().bootstrap();
+  await FavouritesService().init(); // ADDED
   runApp(const GospelDashboardApp());
 }
 

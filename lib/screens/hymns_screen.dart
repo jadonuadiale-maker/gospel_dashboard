@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 import '../services/audio_service.dart';
+import '../services/favourites_service.dart';
 import '../widgets/audio_tile.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/category_nav_bar.dart';
@@ -16,7 +17,9 @@ class HymnsScreen extends StatefulWidget {
 
 class _HymnsScreenState extends State<HymnsScreen> {
   final audio = AudioService();
+  final favourites = FavouritesService();
   late StreamSubscription _audioSub;
+  late StreamSubscription _favSub;
 
   int navIndex = 0;
 
@@ -28,28 +31,33 @@ class _HymnsScreenState extends State<HymnsScreen> {
     ),
     AudioItem(
       title: "How Great Thou Art - Traditional",
-      url: "assets/hymns/Christian_Hymn_-_How_Great_Thou_Art_CeeNaija.com_.opus",
+      url: "assets/hymns/how_great_thou_art.opus",
       category: "Hymn",
     ),
     AudioItem(
       title: "Be Thou My Vision - Traditional",
-      url: "assets/hymns/Selah_-_Be_Thou_My_Vision_CeeNaija.com_.opus",
+      url: "assets/hymns/be_thou_my_vision.opus",
       category: "Hymn",
     ),
   ];
 
-  final List<AudioItem> favouriteHymns = <AudioItem>[];
   final List<AudioItem> hymnsByArtist = <AudioItem>[];
 
   @override
   void initState() {
     super.initState();
-    _audioSub = audio.stateStream.listen((_) => setState(() {}));
+    _audioSub = audio.stateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+    _favSub = favourites.changes.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _audioSub.cancel();
+    _favSub.cancel();
     super.dispose();
   }
 
@@ -59,7 +67,7 @@ class _HymnsScreenState extends State<HymnsScreen> {
 
     switch (navIndex) {
       case 1:
-        visibleList = favouriteHymns;
+        visibleList = favourites.favouritesFor("Hymn");
         break;
       case 2:
         visibleList = hymnsByArtist;
@@ -87,24 +95,27 @@ class _HymnsScreenState extends State<HymnsScreen> {
             final item = visibleList[index];
             final isCurrent = audio.currentUrl == item.url;
             final isPlaying = audio.isPlaying && isCurrent;
+            final isFavourite = favourites.isFavourite(item.url);
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: AudioTile(
                 item: item,
                 isPlaying: isPlaying,
+                isFavourite: isFavourite,
                 onPlayPause: () {
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title);
                   } else {
                     audio.togglePlayPause();
                   }
                 },
                 onSelectTrack: () {
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title);
                   }
                 },
+                onToggleFavourite: () => favourites.toggleFavourite(item),
               ),
             );
           },

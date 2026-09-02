@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 import '../services/audio_service.dart';
+import '../services/favourites_service.dart';
 import '../widgets/audio_tile.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/category_nav_bar.dart';
@@ -16,7 +17,9 @@ class SongsScreen extends StatefulWidget {
 
 class _SongsScreenState extends State<SongsScreen> {
   final audio = AudioService();
+  final favourites = FavouritesService();
   late StreamSubscription _audioSub;
+  late StreamSubscription _favSub;
 
   int navIndex = 0;
 
@@ -43,18 +46,23 @@ class _SongsScreenState extends State<SongsScreen> {
     ),
   ];
 
-  final List<AudioItem> favouriteSongs = <AudioItem>[];
   final List<AudioItem> songsByArtist = <AudioItem>[];
 
   @override
   void initState() {
     super.initState();
-    _audioSub = audio.stateStream.listen((_) => setState(() {}));
+    _audioSub = audio.stateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+    _favSub = favourites.changes.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _audioSub.cancel();
+    _favSub.cancel();
     super.dispose();
   }
 
@@ -64,7 +72,7 @@ class _SongsScreenState extends State<SongsScreen> {
 
     switch (navIndex) {
       case 1:
-        visibleList = favouriteSongs;
+        visibleList = favourites.favouritesFor("Song");
         break;
       case 2:
         visibleList = songsByArtist;
@@ -92,26 +100,27 @@ class _SongsScreenState extends State<SongsScreen> {
             final item = visibleList[index];
             final isCurrent = audio.currentUrl == item.url;
             final isPlaying = audio.isPlaying && isCurrent;
+            final isFavourite = favourites.isFavourite(item.url);
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: AudioTile(
                 item: item,
                 isPlaying: isPlaying,
+                isFavourite: isFavourite,
                 onPlayPause: () {
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title);
                   } else {
                     audio.togglePlayPause();
                   }
                 },
                 onSelectTrack: () {
-                  // Tap tile → set current track only
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title);
                   }
-                  // No navigation; mini-player reflects this change globally
                 },
+                onToggleFavourite: () => favourites.toggleFavourite(item),
               ),
             );
           },

@@ -5,15 +5,19 @@ import '../models/audio_item.dart';
 class AudioTile extends StatelessWidget {
   final AudioItem item;
   final bool isPlaying;
+  final bool isFavourite;
   final VoidCallback onPlayPause;
-  final VoidCallback onSelectTrack; // renamed from onOpenPlayer
+  final VoidCallback onSelectTrack;
+  final VoidCallback onToggleFavourite;
 
   const AudioTile({
     super.key,
     required this.item,
     required this.isPlaying,
+    required this.isFavourite,
     required this.onPlayPause,
     required this.onSelectTrack,
+    required this.onToggleFavourite,
   });
 
   @override
@@ -33,7 +37,6 @@ class AudioTile extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        // Tap anywhere → select track (no navigation)
         onTap: onSelectTrack,
         child: Row(
           children: [
@@ -67,6 +70,13 @@ class AudioTile extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              icon: Icon(
+                isFavourite ? Icons.favorite : Icons.favorite_border,
+                color: isFavourite ? Colors.redAccent : Colors.grey.shade400,
+              ),
+              onPressed: onToggleFavourite,
             ),
           ],
         ),

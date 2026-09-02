@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/audio_item.dart';
 import '../services/audio_service.dart';
+import '../services/favourites_service.dart';
 import '../widgets/audio_tile.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/category_nav_bar.dart';
@@ -16,7 +17,9 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   final audio = AudioService();
+  final favourites = FavouritesService();
   late StreamSubscription _audioSub;
+  late StreamSubscription _favSub;
 
   int navIndex = 0;
 
@@ -43,7 +46,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
     ),
   ];
 
-  final List<AudioItem> favouriteMessages = <AudioItem>[];
   final List<AudioItem> messagesByMinister = <AudioItem>[];
 
   @override
@@ -52,11 +54,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
     _audioSub = audio.stateStream.listen((_) {
       if (mounted) setState(() {});
     });
+    _favSub = favourites.changes.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _audioSub.cancel();
+    _favSub.cancel();
     super.dispose();
   }
 
@@ -66,7 +72,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     switch (navIndex) {
       case 1:
-        visibleList = favouriteMessages;
+        visibleList = favourites.favouritesFor("Message");
         break;
       case 2:
         visibleList = messagesByMinister;
@@ -94,12 +100,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
             final item = visibleList[index];
             final isCurrent = audio.currentUrl == item.url;
             final isPlaying = audio.isPlaying && isCurrent;
+            final isFavourite = favourites.isFavourite(item.url);
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: AudioTile(
                 item: item,
                 isPlaying: isPlaying,
+                isFavourite: isFavourite,
                 onPlayPause: () {
                   if (!isCurrent) {
                     audio.playUrl(item.url, title: item.title, streaming: true);
@@ -112,6 +120,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     audio.playUrl(item.url, title: item.title, streaming: true);
                   }
                 },
+                onToggleFavourite: () => favourites.toggleFavourite(item),
               ),
             );
           },
