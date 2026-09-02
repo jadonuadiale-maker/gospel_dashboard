@@ -12,7 +12,9 @@ import 'theme/app_theme.dart';
 import 'services/audio_service.dart';
 import 'widgets/mini_player.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AudioService().bootstrap();
   runApp(const GospelDashboardApp());
 }
 

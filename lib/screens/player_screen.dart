@@ -1,4 +1,5 @@
 // lib/screens/player_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
 import '../models/audio_item.dart';
@@ -19,19 +20,26 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   late AudioService audio;
+  late StreamSubscription _audioSub;
 
   @override
   void initState() {
     super.initState();
     audio = widget.audio;
 
-    // Ensure correct track plays when opened with a specific item
     if (widget.item != null && audio.currentUrl != widget.item!.url) {
       audio.playUrl(widget.item!.url);
     }
 
-    // Listen for playback state changes to refresh UI
-    audio.stateStream.listen((_) => setState(() {}));
+    _audioSub = audio.stateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioSub.cancel();
+    super.dispose();
   }
 
   @override
@@ -39,7 +47,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     final currentUrl = audio.currentUrl;
     final isPlaying = audio.isPlaying;
 
-    // Handle case where no track is selected
     if (currentUrl == null) {
       return const Scaffold(
         body: Center(child: Text("No track selected")),
@@ -54,7 +61,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // --- Track title display ---
             Text(
               currentUrl.split('/').last,
               textAlign: TextAlign.center,
@@ -66,18 +72,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
             const SizedBox(height: 30),
 
-            // --- Playback progress slider ---
             StreamBuilder<Duration>(
               stream: audio.positionStream,
+              initialData: audio.currentPosition,
               builder: (context, snapshotPos) {
                 final pos = snapshotPos.data ?? Duration.zero;
 
                 return StreamBuilder<Duration?>(
                   stream: audio.durationStream,
+                  initialData: audio.currentDuration,
                   builder: (context, snapshotDur) {
                     final dur = snapshotDur.data ?? Duration.zero;
 
-                    // Ensure proper double types for Slider
                     final max = dur.inSeconds.toDouble();
                     final value = pos.inSeconds.toDouble().clamp(0.0, max);
 
@@ -106,7 +112,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
             const SizedBox(height: 30),
 
-            // --- Playback controls ---
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -133,7 +138,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
             const SizedBox(height: 30),
 
-            // --- Favourite button placeholder ---
             ElevatedButton.icon(
               icon: const Icon(Icons.favorite_border),
               label: const Text("Favourite"),
@@ -147,7 +151,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  // --- Helper: format duration as mm:ss ---
   String _fmt(Duration d) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');

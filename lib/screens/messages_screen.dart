@@ -49,7 +49,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   void initState() {
     super.initState();
-    _audioSub = audio.stateStream.listen((_) => setState(() {}));
+    _audioSub = audio.stateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -100,14 +102,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 isPlaying: isPlaying,
                 onPlayPause: () {
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title, streaming: true);
                   } else {
                     audio.togglePlayPause();
                   }
                 },
                 onSelectTrack: () {
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title, streaming: true);
                   }
                 },
               ),

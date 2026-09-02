@@ -44,7 +44,9 @@ class _SermonsScreenState extends State<SermonsScreen> {
   @override
   void initState() {
     super.initState();
-    _audioSub = audio.stateStream.listen((_) => setState(() {}));
+    _audioSub = audio.stateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -95,14 +97,14 @@ class _SermonsScreenState extends State<SermonsScreen> {
                 isPlaying: isPlaying,
                 onPlayPause: () {
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title, streaming: true);
                   } else {
                     audio.togglePlayPause();
                   }
                 },
                 onSelectTrack: () {
                   if (!isCurrent) {
-                    audio.playUrl(item.url);
+                    audio.playUrl(item.url, title: item.title, streaming: true);
                   }
                 },
               ),
