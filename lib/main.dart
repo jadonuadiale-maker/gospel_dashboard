@@ -13,12 +13,14 @@ import 'services/audio_service.dart';
 import 'widgets/mini_player.dart';
 import 'services/favourites_service.dart';
 import 'services/playlists_service.dart';
+import 'services/ministers_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AudioService().bootstrap();
   await FavouritesService().init();
-  await PlaylistsService().init(); // ADDED
+  await PlaylistsService().init();
+  await MinistersService().init(); // ADDED
   runApp(const GospelDashboardApp());
 }
 

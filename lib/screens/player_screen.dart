@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
 import '../services/favourites_service.dart';
 import '../services/playlists_service.dart';
+import '../services/ministers_service.dart';
 import '../models/audio_item.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -24,8 +25,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
   late AudioService audio;
   final favourites = FavouritesService();
   final playlists = PlaylistsService();
+  final ministers = MinistersService();
   late StreamSubscription _audioSub;
   late StreamSubscription _favSub;
+  late StreamSubscription _ministersSub;
 
   @override
   void initState() {
@@ -42,12 +45,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _favSub = favourites.changes.listen((_) {
       if (mounted) setState(() {});
     });
+    _ministersSub = ministers.changes.listen((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _audioSub.cancel();
     _favSub.cancel();
+    _ministersSub.cancel();
     super.dispose();
   }
 
@@ -78,17 +85,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _showAddToPlaylistSheet(AudioItem item) async {
-    // Captured from the stable outer screen context, BEFORE any sheet or
-    // dialog is opened/closed — this avoids relying on a context that
-    // might already be mid-teardown by the time we try to show a SnackBar.
     final messenger = ScaffoldMessenger.of(context);
     final existing = playlists.playlistsFor(item.category);
 
     await showModalBottomSheet(
       context: context,
       builder: (sheetContext) {
-        // Renamed from `context` to `sheetContext` so it can never be
-        // confused with the outer screen's context above.
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -116,10 +118,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 leading: const Icon(Icons.add),
                 title: const Text("New playlist"),
                 onTap: () async {
-                  Navigator.pop(sheetContext); // close sheet before showing dialog
+                  Navigator.pop(sheetContext);
                   final controller = TextEditingController();
                   final name = await showDialog<String>(
-                    context: context, // outer, stable — still valid here
+                    context: context,
                     builder: (dialogContext) => AlertDialog(
                       title: const Text("New Playlist"),
                       content: TextField(
@@ -155,6 +157,94 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
+  Future<void> _showSetMinisterSheet(AudioItem item) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final existingNames = ministers.ministerNamesFor(item.category);
+    final current = ministers.ministerFor(item.url);
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  current == null
+                      ? "Set Minister/Artist"
+                      : "Currently: $current",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...existingNames.map((name) => ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(name),
+                    trailing: name == current ? const Icon(Icons.check) : null,
+                    onTap: () async {
+                      await ministers.setMinister(item.category, item, name);
+                      Navigator.pop(sheetContext);
+                      messenger.showSnackBar(
+                        SnackBar(content: Text("Set to $name")),
+                      );
+                    },
+                  )),
+              ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text("New name"),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final controller = TextEditingController();
+                  final name = await showDialog<String>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text("Minister / Artist Name"),
+                      content: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        decoration: const InputDecoration(hintText: "e.g. Dr Myles Munroe"),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+                          child: const Text("Save"),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (name != null && name.isNotEmpty) {
+                    await ministers.setMinister(item.category, item, name);
+                    messenger.showSnackBar(
+                      SnackBar(content: Text("Set to $name")),
+                    );
+                  }
+                },
+              ),
+              if (current != null)
+                ListTile(
+                  leading: const Icon(Icons.clear, color: Colors.redAccent),
+                  title: const Text("Clear assignment", style: TextStyle(color: Colors.redAccent)),
+                  onTap: () async {
+                    await ministers.clearMinister(item.url);
+                    Navigator.pop(sheetContext);
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text("Assignment cleared")),
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUrl = audio.currentUrl;
@@ -173,6 +263,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
       appBar: AppBar(
         title: const Text("Now Playing"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: "Set minister/artist",
+            onPressed: () => _showSetMinisterSheet(item),
+          ),
           IconButton(
             icon: const Icon(Icons.playlist_add),
             tooltip: "Add to playlist",
