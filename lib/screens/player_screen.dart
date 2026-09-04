@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
 import '../services/favourites_service.dart';
+import '../services/playlists_service.dart';
 import '../models/audio_item.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> {
   late AudioService audio;
   final favourites = FavouritesService();
+  final playlists = PlaylistsService();
   late StreamSubscription _audioSub;
   late StreamSubscription _favSub;
 
@@ -49,9 +51,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     super.dispose();
   }
 
-  /// The '/player' route is currently opened without an item (see
-  /// main.dart), so this reconstructs a reasonable AudioItem straight
-  /// from the asset path when widget.item wasn't supplied.
   AudioItem _resolveItem(String url) {
     if (widget.item != null) return widget.item!;
 
@@ -75,10 +74,84 @@ class _PlayerScreenState extends State<PlayerScreen> {
         category = 'Unknown';
     }
 
-    return AudioItem(
-      title: segments.last,
-      url: url,
-      category: category,
+    return AudioItem(title: segments.last, url: url, category: category);
+  }
+
+  Future<void> _showAddToPlaylistSheet(AudioItem item) async {
+    // Captured from the stable outer screen context, BEFORE any sheet or
+    // dialog is opened/closed — this avoids relying on a context that
+    // might already be mid-teardown by the time we try to show a SnackBar.
+    final messenger = ScaffoldMessenger.of(context);
+    final existing = playlists.playlistsFor(item.category);
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) {
+        // Renamed from `context` to `sheetContext` so it can never be
+        // confused with the outer screen's context above.
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  "Add to ${item.category} Playlist",
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...existing.map((p) => ListTile(
+                    leading: const Icon(Icons.playlist_play),
+                    title: Text(p.name),
+                    subtitle: Text("${p.tracks.length} track(s)"),
+                    onTap: () async {
+                      await playlists.addTrackToPlaylist(item.category, p.name, item);
+                      Navigator.pop(sheetContext);
+                      messenger.showSnackBar(
+                        SnackBar(content: Text("Added to ${p.name}")),
+                      );
+                    },
+                  )),
+              ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text("New playlist"),
+                onTap: () async {
+                  Navigator.pop(sheetContext); // close sheet before showing dialog
+                  final controller = TextEditingController();
+                  final name = await showDialog<String>(
+                    context: context, // outer, stable — still valid here
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text("New Playlist"),
+                      content: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        decoration: const InputDecoration(hintText: "Playlist name"),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+                          child: const Text("Create"),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (name != null && name.isNotEmpty) {
+                    await playlists.addTrackToPlaylist(item.category, name, item);
+                    messenger.showSnackBar(
+                      SnackBar(content: Text("Added to $name")),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -99,6 +172,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Now Playing"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.playlist_add),
+            tooltip: "Add to playlist",
+            onPressed: () => _showAddToPlaylistSheet(item),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

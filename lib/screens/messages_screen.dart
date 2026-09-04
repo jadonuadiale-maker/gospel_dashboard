@@ -87,7 +87,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.playlist_play),
-            onPressed: () => Navigator.pushNamed(context, '/playlist'),
+            onPressed: () => Navigator.pushNamed(context, '/playlist', arguments: 'Message'), // category string per screen
           ),
         ],
       ),

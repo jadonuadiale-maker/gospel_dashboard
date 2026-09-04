@@ -87,7 +87,7 @@ class _SongsScreenState extends State<SongsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.playlist_play),
-            onPressed: () => Navigator.pushNamed(context, '/playlist'),
+            onPressed: () => Navigator.pushNamed(context, '/playlist', arguments: 'Song'), // category string per screen
           ),
         ],
       ),

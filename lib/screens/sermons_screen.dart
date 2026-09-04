@@ -82,7 +82,7 @@ class _SermonsScreenState extends State<SermonsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.playlist_play),
-            onPressed: () => Navigator.pushNamed(context, '/playlist'),
+            onPressed: () => Navigator.pushNamed(context, '/playlist', arguments: 'Sermon'), // category string per screen
           ),
         ],
       ),

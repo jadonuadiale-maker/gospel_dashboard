@@ -82,7 +82,7 @@ class _HymnsScreenState extends State<HymnsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.playlist_play),
-            onPressed: () => Navigator.pushNamed(context, '/playlist'),
+            onPressed: () => Navigator.pushNamed(context, '/playlist', arguments: 'Hymn'), // category string per screen
           ),
         ],
       ),

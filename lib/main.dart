@@ -12,11 +12,13 @@ import 'theme/app_theme.dart';
 import 'services/audio_service.dart';
 import 'widgets/mini_player.dart';
 import 'services/favourites_service.dart';
+import 'services/playlists_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AudioService().bootstrap();
-  await FavouritesService().init(); // ADDED
+  await FavouritesService().init();
+  await PlaylistsService().init(); // ADDED
   runApp(const GospelDashboardApp());
 }
 
@@ -65,6 +67,7 @@ class GospelDashboardApp extends StatelessWidget {
         }
 
         return PageRouteBuilder(
+          settings: settings, // ADDED — without this, arguments never reach the page
           pageBuilder: (_, __, ___) => GlobalShell(child: page),
           transitionsBuilder: (_, animation, __, child) =>
               FadeTransition(opacity: animation, child: child),
