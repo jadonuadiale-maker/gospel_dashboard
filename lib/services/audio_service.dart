@@ -1,8 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter_soloud/flutter_soloud.dart';
-
 import 'package:audio_service/audio_service.dart' as pkg_audio_service;
+   import 'package:audio_session/audio_session.dart';
 
 class PlaybackAudioHandler extends pkg_audio_service.BaseAudioHandler
     with pkg_audio_service.QueueHandler, pkg_audio_service.SeekHandler {
@@ -40,8 +39,15 @@ class PlaybackAudioHandler extends pkg_audio_service.BaseAudioHandler
   late final Future<void> _initFuture;
 
   PlaybackAudioHandler() {
-    _initFuture = _soloud.init();
-  }
+     _initFuture = _initAudio();
+   }
+
+  Future<void> _initAudio() async {
+     final session = await AudioSession.instance;
+     await session.configure(const AudioSessionConfiguration.music());
+     await session.setActive(true);
+     await _soloud.init();
+   }
 
   /// Loads and plays [assetPath]. [streaming] controls whether the file is
   /// fully decoded into memory (fast start, ideal for short tracks like
